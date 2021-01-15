@@ -1,0 +1,89 @@
+---
+title: "merging-csvs"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+
+#importing CSVs to analyze
+placelist <- read.csv("geocoded-places.csv", header = T)
+coordinates <- read.csv("coordinates.csv", header = T)
+day1 <- read.csv("covid-testing-28oct.csv", header = T)
+day2 <- read.csv("covid-testing-31oct.csv", header = T)
+day3 <- read.csv("covid-testing-02nov.csv", header = T)
+day4 <- read.csv("covid-testing-04nov.csv", header = T)
+day5 <- read.csv("covid-testing-06nov.csv", header = T)
+day6 <- read.csv("covid-testing-08nov.csv", header = T)
+
+#start by scraping the place name and coordinates
+located <- data.frame(placelist[,1])
+located <- cbind(located, coordinates[,2])
+located <- cbind(located, coordinates[,3])
+
+#start importing the final testing data into the final CSV
+located <- cbind(located,df1 <- day1$persons_tested_final)
+located <- cbind(located,df2 <- day2$persons_tested_final)
+located <- cbind(located,df3 <- day3$persons_tested_final)
+located <- cbind(located,df4 <- day4$persons_tested_final)
+located <- cbind(located,df5 <- day5$persons_tested_final)
+located <- cbind(located,df6 <- day6$persons_tested_final)
+
+#compare the rates of increase of testing
+located <- cbind(located, (located$df2 / located$df1))
+located <- cbind(located, (located$df3 / located$df2))
+located <- cbind(located, (located$df4 / located$df3))
+located <- cbind(located, (located$df5 / located$df4))
+located <- cbind(located, (located$df6 / located$df5))
+
+#finding the average rate of increase of testing over the 5 periods
+tobeaveraged <- (located[,(10:14)] - 1)
+located$averages <- rowMeans(tobeaveraged)
+
+write.csv(located, "data_for_use.csv", row.names = T)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+located <- read.csv("cleaned_data.csv", header = T)
+#combine the coordinates together to form one column
+newCoord <- data.frame(x = located$Coordinates)
+newCoord <- (newCoord %>% separate(x, c("newLn", "newLt"), sep = "([,])"))
+newCoord$newLt <- sub(" ", "", newCoord$newLt)
+located <- cbind(located,newCoord$newLn)
+located <- cbind(located, newCoord$newLt)
+
+write.csv(located, "cleaned_data.csv", row.names = T)
+```
+
+```{r}
+finaldata <- read.csv("cleaned_data.csv", header = T)
+
+#subtract the days to find the number of tests completed over each interval
+finaldata$chunk1 <- ((finaldata$`day2.persons_tested_final` - finaldata$`day1.persons_tested_final`) / 3)
+finaldata$chunk2 <- ((finaldata$`day6.persons_tested_final` - finaldata$`day5.persons_tested_final`) / 2)
+
+finaldata$finalprop <- (finaldata$chunk2 / finaldata$chunk1)
+
+write.csv(finaldata, "cleaned_data.csv", row.names = T)
+```
+
+```{r}
+finaldata <- read.csv("cleaned_data.csv", header = T)
+
+positions <- finaldata$newCoord.newLn
+positions <- cbind(positions, finaldata$newCoord.newLt)
+
+write.csv(positions, "coordinates.csv", row.names = T)
+```

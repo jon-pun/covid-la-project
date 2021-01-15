@@ -1,0 +1,63 @@
+---
+title: "testing-rate"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+#importing CSVs to analyze
+placelist <- read.csv("geocoded-places.csv", header = T)
+coordinates <- read.csv("coordinates.csv", header = T)
+day1 <- read.csv("covid-testing-28oct.csv", header = T)
+day2 <- read.csv("covid-testing-31oct.csv", header = T)
+day3 <- read.csv("covid-testing-02nov.csv", header = T)
+day4 <- read.csv("covid-testing-04nov.csv", header = T)
+day5 <- read.csv("covid-testing-06nov.csv", header = T)
+day6 <- read.csv("covid-testing-08nov.csv", header = T)
+
+#start aggregating data on testing rates
+rates <- data.frame(placelist[,1])
+rates <- cbind(rates, coordinates)
+rates <- cbind(rates, day1$testing_rate_final)
+rates <- cbind(rates, day2$testing_rate_final)
+rates <- cbind(rates, day3$testing_rate_final)
+rates <- cbind(rates, day4$testing_rate_final)
+rates <- cbind(rates, day5$testing_rate_final)
+rates <- cbind(rates, day6$testing_rate_final)
+rates$Population <- day1$population
+
+#take the differences of those testing rates
+rates$diff1 <- (rates[,6] - rates[,5])
+rates$diff2 <- (rates[,7] - rates[,6])
+rates$diff3 <- (rates[,8] - rates[,7])
+rates$diff4 <- (rates[,9] - rates[,8])
+rates$diff5 <- (rates[,10] - rates[,9])
+
+#find the testing rate for each date
+rates$diff1 <- (rates$diff1 / rates$Population)
+rates$diff2 <- (rates$diff2 / rates$Population)
+rates$diff3 <- (rates$diff3 / rates$Population)
+rates$diff4 <- (rates$diff4 / rates$Population)
+rates$diff5 <- (rates$diff5 / rates$Population)
+
+#find the average change in testing rate
+rates$change1 <- (rates$diff2 / rates$diff1)
+rates$change2 <- (rates$diff3 / rates$diff2)
+rates$change3 <- (rates$diff4 / rates$diff3)
+rates$change4 <- (rates$diff5 / rates$diff4)
+
+#average those changes out
+rates$average <- rowMeans(rates[,(17:20)] - 1)
+
+write.csv(rates, "avgtestingrates.csv", row.names = TRUE)
+
+```

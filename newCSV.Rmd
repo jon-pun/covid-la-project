@@ -1,0 +1,53 @@
+---
+title: "datacleaning"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+
+#read CSVs, import
+day1 <- read.csv("08.28.csv", header = T)
+day2 <- read.csv("08.31.csv", header = T)
+day3 <- read.csv("09.03.csv", header = T)
+day4 <- read.csv("09.07.csv", header = T)
+day5 <- read.csv("09.10.csv", header = T)
+day6 <- read.csv("9.14.csv", header = T)
+day7 <- read.csv("09.17.csv", header = T)
+
+#snag the ZIP codes, total test numbers
+aggregate <- data.frame(day1$MODIFIED_ZCTA)
+aggregate$day1 <- day1$TOTAL_COVID_TESTS
+aggregate$day2 <- day2$TOTAL_COVID_TESTS
+aggregate$day3 <- day3$TOTAL_COVID_TESTS
+aggregate$day4 <- day4$TOTAL_COVID_TESTS
+aggregate$day5 <- day5$TOTAL_COVID_TESTS
+aggregate$day6 <- day6$TOTAL_COVID_TESTS
+aggregate$day7 <- day7$TOTAL_COVID_TESTS
+
+#start comparing
+aggregate$rate1 <- (aggregate$day2 / aggregate$day1)
+aggregate$rate2 <- (aggregate$day3 / aggregate$day2)
+aggregate$rate3 <- (aggregate$day4 / aggregate$day3)
+aggregate$rate4 <- (aggregate$day5 / aggregate$day4)
+aggregate$rate5 <- (aggregate$day6 / aggregate$day5)
+aggregate$rate6 <- (aggregate$day7 / aggregate$day6)
+
+#take the mean
+aggregate$Average <- rowMeans(aggregate[,(9:14)]) - 1
+
+#add place names
+aggregate$Location <- day1$NEIGHBORHOOD_NAME
+
+write.csv(aggregate, "datatouse.csv", row.names = T)
+                              
+```
